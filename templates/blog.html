@@ -1,14 +1,15 @@
+
 {% extends "base.html" %}
 
 {% block content %}
 
-    {% for blog in blogs %}
+{% for blog in blogs %}
+<h1><a href = '/blog?bid={{blog.id}}'>{{blog.title}}</a></h1>
+<br/>
+<p>{{blog.body}}</p>
+<br/>
+Author: {{blog.owner.username}}
 
-    <a href = './blog?bid={{blog.id}}'>{{blog.title}}</a>
-
-    
-    {% endfor %}
-
+{% endfor %}
 
 {% endblock %}
-

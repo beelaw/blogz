@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -6,6 +6,7 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:password@localhost:8889/blogz'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
+app.secret_key = '02gn28h05j'
 
 class Blog(db.Model):
     __tablename__ = 'blog'
@@ -35,11 +36,11 @@ class User(db.Model):
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'register']
+    allowed_routes = ['login', 'signup', 'index', 'blog', 'singleUser']
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
-@app.route('login', methods=['POST', 'GET'])
+@app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
@@ -63,7 +64,7 @@ def signup():
 
         #validate data
 
-        existing user = User.query.filter_by(username=username).first()
+        existing_user = User.query.filter_by(username=username).first()
         if not existing_user:
             new_user = User(username, password)
             db.session.add(new_user)
@@ -125,19 +126,18 @@ def blog():
     blogs = Blog.query.all()
     blogid=request.args.get('bid')
     if blogid:
-        blogid=request.args.get('bid')
         new_post = Blog.query.get(blogid)
         return render_template('postblog.html', blogs=blogs, post=new_post)
 
     else:
         return render_template('blog.html', blogs=blogs)
 
+@app.route('/singleUser')
 @app.route('/singleUser/<user>')
 def singleUser():
     user_name_fetch = request.args.get('user')
-    user = User.query.get(user_name_fetch)
-    user_blogs = Blog.query.get(user.id)
-    return render_template('singleUser.html', blogs=user_blogs)
+    user = User.query.filter_by(username=user_name_fetch).first()
+    return render_template('singleUser.html', user=user)
 
 #@app.route('/postblog/', methods=['GET'])
 #@app.route('/postblog/<idef>/', methods=['GET'])
