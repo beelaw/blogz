@@ -1,1 +1,14 @@
-<!-->used to generate blogs associated with a single user, GET request with user query parameter on /blog route</-->
+
+
+{% extends "base.html" %}
+
+{% block content %}
+
+{% for blog in blogs %}
+    <h1>{{blog.title}}</h1>
+    <br/>
+    <p>{{blog.body}}</p>
+    <hr />
+
+
+{% endblock %}

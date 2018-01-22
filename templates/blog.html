@@ -1,10 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!--
-{% if not blogs %}
-<p>No blogs yet</p>
-{% else %} -->
+
     {% for blog in blogs %}
 
     <a href = './blog?bid={{blog.id}}'>{{blog.title}}</a>
@@ -12,7 +9,6 @@
     
     {% endfor %}
 
-<!--{% endif %} -->
 
 {% endblock %}
 

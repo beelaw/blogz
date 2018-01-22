@@ -32,10 +32,67 @@ class User(db.Model):
         self.username = username
         self.password = password
 
-@app.route('/newpost', methods=['POST', 'GET'])
+
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'register']
+    if request.endpoint not in allowed_routes and 'username' not in session:
+        return redirect('/login')
+
+@app.route('login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.password == password:
+            session['username'] = username
+            flash("Logged in")
+            return redirect('/')
+        else:
+            flash('User password incorrect, or user does not exist', 'error')
+
+    return render_template('login.html')
+
+@app.route('/signup', methods=['POST', 'GET'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        verify = request.form['verify']
+
+        #validate data
+
+        existing user = User.query.filter_by(username=username).first()
+        if not existing_user:
+            new_user = User(username, password)
+            db.session.add(new_user)
+            db.session.commit()
+            session['username'] = username
+            return redirect('/')
+        else:
+            error_text = "Username already taken"
+            return render_template('signup.html', error_text = error_text)
+
+    return render_template('signup.html')
+
+@app.route('/logout')
+def logout():
+    del session['username']
+    return redirect('/')
+
+@app.route('/')
 def index():
+    #owner = User.query.filter_by(username=session['username']).first()
+    users = User.query.all()
+
+    return render_template("index.html", users=users)
 
 
+@app.route('/newpost', methods=['POST', 'GET'])
+def posting():
+
+    owner = User.query.filter_by(username=session['username']).first()
     error_text = ''
 
     if request.method == 'POST':
@@ -46,16 +103,13 @@ def index():
             error_text = "Please fill out all forms"
             return render_template('newpost.html', title_ph = title, body_ph = body, error_text = error_text)
 
-        new_blog = Blog(title, body)
+        new_blog = Blog(title, body, owner)
         db.session.add(new_blog)
         db.session.commit()
 
         blogs = Blog.query.all()
 
-        blogid = 0
-        for i in blogs:
-            blogid += 1
-        new_post = Blog.query.get(blogid) #find length of list instead
+        new_post = Blog.query.get(len(blogs))
 
         return render_template('postblog.html', blogs=blogs, post=new_post)
     else:
@@ -78,7 +132,12 @@ def blog():
     else:
         return render_template('blog.html', blogs=blogs)
 
-
+@app.route('/singleUser/<user>')
+def singleUser():
+    user_name_fetch = request.args.get('user')
+    user = User.query.get(user_name_fetch)
+    user_blogs = Blog.query.get(user.id)
+    return render_template('singleUser.html', blogs=user_blogs)
 
 #@app.route('/postblog/', methods=['GET'])
 #@app.route('/postblog/<idef>/', methods=['GET'])
